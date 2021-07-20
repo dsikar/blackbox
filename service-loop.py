@@ -4,17 +4,18 @@ import time
 import datetime
 import readID as readIDVar
 
+
 import config
 import constants
+
 
 
 poll_list = [ True, True ]
 
 point_poll_sucess = True;
 
-
-
 ptp_sequence = 6
+
 
 def writelog(entry, logfile) :
     """
@@ -43,6 +44,7 @@ def hex_to_int( value ) :
 
   return int( value, 16 )
 
+
 def DecodeDeviceType( device_type_id ) :
 
   DeviceTypeText = "Unknown"
@@ -62,6 +64,7 @@ def DecodeDeviceType( device_type_id ) :
   
   
   return DeviceTypeText
+
 
 def decode_point_info_reply( packet_to_decode ) : 
 
@@ -113,11 +116,13 @@ def decode_point_info_reply( packet_to_decode ) :
        print ( "Sector      " + str( varlist[ 25 ] ) + "    254 if not sector")
        print ( "Loop type   " + str( varlist[ 26 ] ) + "      1 is MX")
        print ( "raw dev id  " + str( varlist[ 27 ] ) )
+
        print ( "----" )
     else:
        point_poll_sucess = False
     
     #print( "Full packet reply : " + packet_to_decode )
+
     
     
 def decode_panel_info_reply( packet_to_decode ) :     
@@ -290,7 +295,7 @@ def decode_reply_packet( packet_to_decode ) :
     shorter = packet_to_decode[:length - 3]
 
     varlist = map(hex_to_int, shorter .split(','));
-    
+
     # remove PTP header info
     varlist.pop(0)
     varlist.pop(0)
@@ -319,10 +324,6 @@ def FormRequestPacket( loop, point  ) :
     global ptp_sequence
 
     varlist = map(int, SamplePacket .split(','));
-
-    length = len( varlist )
-    
-    result = "error"
 
     detail_display = 0
     
@@ -364,6 +365,7 @@ def FormRequestPacket( loop, point  ) :
         
         checksum = 0
         for el in varlist:
+
           checksum += el
           result += "," + str(el);
 
@@ -371,15 +373,11 @@ def FormRequestPacket( loop, point  ) :
 
         varlist.append( checksum )
 
+
         #print( "Calculated checksum: " + str(checksum))
 
         result += "," + str(checksum)
-    else:
-        print( "ERROR" ) 
-        print( "Packet offset : " + str( 9 ) +  "  value " + str( varlist[ 9 ] ) )
-        print( "Packet offset : " + str( 10 ) +  "  value " + str( varlist[ 10 ] ) )
-        print( "Packet offset : " + str( 11 ) +  "  value " + str( varlist[ 11 ] ) )
-        print( "Packet offset : " + str( 12 ) +  "  value " + str( varlist[ 12 ] ) )
+
 
     #print( "Constructed Packet to send : \n" + result )
 
@@ -577,6 +575,12 @@ def CheckerScanMode( ) :
 # START OF MAIN
 #
 
+
+
+delaybetweenpolls = 0.2
+min_time_between_polls = 5
+
+
 pid = readIDVar.readID();
 pid = pid.strip()
 entry = "Logging Panel Points PI id: " + str(pid) + '\n\n'
@@ -597,4 +601,6 @@ if (config.MODE_IS == config.POINT_INFO_SCAN) :
 if (config.MODE_IS == config.CHECKER_MODE) : 
   CheckerScanMode()
                
+
+
           
