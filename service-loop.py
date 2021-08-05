@@ -10,7 +10,6 @@ import constants
 
 
 
-
 poll_list = [ True, True ]
 
 point_poll_sucess = True;
@@ -67,7 +66,6 @@ def DecodeDeviceType( device_type_id ) :
   
   
   return DeviceTypeText
-
 
 
 def DecodeChannelType( channel_type_value ) : 
@@ -185,7 +183,6 @@ def decode_point_info_reply( packet_to_decode ) :
 
     # remove checksum from end
     shorter = packet_to_decode[:length - 3]
-   
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -284,8 +281,6 @@ def decode_point_info_reply( packet_to_decode ) :
     for el in varlist:
       packet_to_log += str(el) + ","
     #print("LOG THIS [new]: \n" + packet_to_log )
-    
-    
     
 def decode_panel_info_reply( packet_to_decode ) :     
     
