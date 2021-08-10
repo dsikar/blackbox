@@ -720,6 +720,8 @@ pid = pid.strip()
 entry = "Logging Panel Points Panel ID: " + str(pid) + '\n\n'
 print(entry)
 
+# check logging directory
+checkLogDir() 
 
 logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
 logfile += '_BlackBox.log'
