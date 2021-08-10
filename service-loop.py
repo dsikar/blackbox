@@ -1,7 +1,5 @@
 import subprocess
 import shlex
-import time
-import datetime
 import readID as readIDVar
 from logging import writelog, checkLogDir
 
