@@ -3,7 +3,7 @@ import shlex
 import time
 import datetime
 import readID as readIDVar
-from logging import writelog
+from logging import writelog, checkLogDir
 
 
 import config
