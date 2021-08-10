@@ -3,8 +3,6 @@ import subprocess
 import config as conf
 import os
 
-// TODO check for "logs" sub-directory
-
 def checkLogDir() :
     """
     Check if log direction exists, as defined in config.py
