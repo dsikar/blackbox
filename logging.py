@@ -31,7 +31,7 @@ def writelog(entry, logfile) :
     entry = curr_time + entry
     if (conf.IS_RUNNING_ON_PI == false) :
         writelog_windows(entry, logfile)
-    else
+    else :
         writelog_pi(entry, logfile)
 
 
