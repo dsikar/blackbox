@@ -3,6 +3,7 @@ import shlex
 import time
 import datetime
 import readID as readIDVar
+from logging import writelog
 
 
 import config
@@ -15,32 +16,6 @@ poll_list = [ True, True ]
 point_poll_sucess = True;
 
 ptp_sequence = 6
-
-
-def writelog(entry, logfile) :
-    """
-    writelog - prepend time and write log entry to log file
-    to usb drive is exists, otherwise to /tmp
-    Input
-        entry: string, log entry
-        logfile: string, log file
-    Output
-        none
-    """
-    curr_time = time.strftime('%d/%m/%Y,%H:%M:%S,', time.gmtime())
-    entry = curr_time + entry
-    logdrive = ''
-    out = subprocess.check_output(['ls', '/media/pi'])
-    if len(out) > 0 :
-        logdrive = '/media/pi/' + out
-        logdrive = logdrive.rstrip('\n')
-        logdrive += '/'
-    else :
-        logdrive = '/tmp/'
-    logdrive += logfile
-    fout = open(logdrive, 'a')
-    fout.write(entry)
-    fout.close()
 
 def hex_to_int( value ) :
 
@@ -390,6 +365,8 @@ def send_packet_after_panel_info( send_packet_after_panel_info ) :
 
 
     payload = subprocess.check_output(shlex.split(action));
+    # logging raw data for now, decoded packet to follow
+
 
     if len(payload) > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
         # writelog(payload,logfile)
@@ -740,7 +717,7 @@ min_time_between_polls = 5
 
 pid = readIDVar.readID();
 pid = pid.strip()
-entry = "Logging Panel Points PI id: " + str(pid) + '\n\n'
+entry = "Logging Panel Points Panel ID: " + str(pid) + '\n\n'
 print(entry)
 
 
@@ -748,7 +725,7 @@ logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
 logfile += '_BlackBox.log'
 # todo, adapt for Windows
 print(entry)
-# writelog(entry, logfile)
+writelog(entry, logfile)
 
 
 if (config.MODE_IS == config.POINT_INFO_SCAN) : 
