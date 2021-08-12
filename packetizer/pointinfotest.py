@@ -3,8 +3,17 @@ from readers import DataReader;
 from byte import Byte;
 
 import sys
+import os.path as path
+from inspect import getsourcefile
 import subprocess
 import time
+
+# put parent directory in path so
+# we may import config.py
+current_dir = path.dirname(path.abspath(getsourcefile(lambda:0)))
+sys.path.insert(0, current_dir[:current_dir.rfind(path.sep)])
+
+import config as conf
 
 tempData = 0;
 startTime = 0;
@@ -14,9 +23,12 @@ class PointInfoPacketConstruction:
 
     def createPointInformationPacket(self, data):
 
-      # transfer = SerialDataTransfer("/dev/ttyUSB0");
-      # windows variant
-      transfer = SerialDataTransfer("COM4");
+      # TODO DS add error handling when opening port 
+      if (conf.IS_RUNNING_ON_PI == True) :
+          transfer = SerialDataTransfer(conf.RPI_COM_PORT) #"/dev/ttyUSB0");
+      else :
+          # windows variant
+          transfer = SerialDataTransfer(conf.PC_COM_PORT) #"COM6");
 
       varlist = map(int, data.split(','));
 

@@ -3,10 +3,9 @@ import shlex
 import readID as readIDVar
 from logging import writelog, checkLogDir
 import datetime
-
+import time
 import config
 import constants
-
 
 
 poll_list = [ True, True ]
@@ -189,7 +188,8 @@ def decode_point_info_reply( packet_to_decode ) :
        DeviceTypeAsString = DecodeDeviceType( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET ] )
        print ( "Device type " + str( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET ] ) + "    " + DeviceTypeAsString )
        
-       DeviceAttribsAtString = DecodeDeviceAttibs( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET ] )
+       # TODO Mike Mayhew - we need to define DecodeDeviceAttibs
+       # DeviceAttribsAtString = DecodeDeviceAttibs( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET ] )
        print ( "Attribs     " + str( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET ] ) )
        print ( "group pt1   " + str( varlist[ constants.POINT_REPLY_GROUP_PT1_OFFSET ] ) )
        print ( "group pt2   " + str( varlist[ constants.POINT_REPLY_GROUP_PT2_OFFSET ] ) )
@@ -718,15 +718,15 @@ pid = pid.strip()
 entry = "Logging Panel Points Panel ID: " + str(pid) + '\n\n'
 print(entry)
 
+
 # check logging directory
 checkLogDir() 
 
 logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
 logfile += '_BlackBox.log'
-# todo, adapt for Windows
+
 print(entry)
 writelog(entry, logfile)
-
 
 if (config.MODE_IS == config.POINT_INFO_SCAN) : 
   PointInformationScan()

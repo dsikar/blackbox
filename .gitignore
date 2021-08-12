@@ -1,0 +1,4 @@
+# ignore all .pyc
+*.pyc
+# log files
+logs/

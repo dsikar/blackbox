@@ -9,7 +9,8 @@ IS_RUNNING_ON_PI = False
 DISPLAY_POINT_REQUEST_PACKETS_DETAIL   = 0
 DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW = 1
 
-PC_COM_PORT = "COM10"
+PC_COM_PORT = "COM3"
+RPI_COM_PORT = "/dev/ttyUSB0"
 
 # Mode to go through each configured loop device and log
 # info to USB
