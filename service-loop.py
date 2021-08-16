@@ -239,24 +239,27 @@ def decode_point_info_reply( packet_to_decode ) :
        print ( "OP Unforced " + str( varlist[ constants.POINT_REPLY_OUTPUT_UNFORCED_STATE ] ) )
        print ( "OP Forced   " + str( varlist[ constants.POINT_REPLY_OUTPUT_FORCED_STATE ] ) )
 
-        
-       print ( "----" )
-    else:
-       point_poll_sucess = False
-    
-    #print( "Full packet reply : " + packet_to_decode )
+       print ("----")
 
-    
-    
-    #print("LOG THIS [orig]: \n" + packet_to_decode )
-    packet_to_log = ""
-    
-    for el in varlist:
-      packet_to_log += str(el) + ","
-    #print("LOG THIS [new]: \n" + packet_to_log )
-    
-def decode_panel_info_reply( packet_to_decode ) :     
-    
+       # WE ARE ONLY LOGGING GOOD REPLIES
+       # Replies where there is a device.
+
+       packet_to_log = ""
+
+       for el in varlist:
+           packet_to_log += str(el) + ","
+
+       packet_to_log += "\n"
+
+       writelog(packet_to_log, logfile)
+
+       # print("LOG THIS [new]: \n" + packet_to_log )
+
+    else:
+        point_poll_sucess = False
+
+def decode_panel_info_reply( packet_to_decode ) :
+
     global point_poll_sucess
     
     point_poll_sucess = True
