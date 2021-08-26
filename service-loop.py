@@ -146,16 +146,26 @@ def DecodeAlarmState( InstantAlarmState ) :
 
 
 def decode_point_info_reply( packet_to_decode ) : 
-
+    """
+    todo NEED TO GET INTO THE HABIT OF ADDING FUNCTION INFO
+    Input:
+        packet_to_decode: comma separated string
+    """
     global point_poll_sucess
     
     point_poll_sucess = True
 
-    length = len( packet_to_decode )
-
+    # length = len( packet_to_decode )
+    # print("packet_to_decode",packet_to_decode)
     # remove checksum from end
-    shorter = packet_to_decode[:length - 3]
+    # changed 3 to 2 as this string "'\n" is two characters, not three
+    # TODO error checking needed, if packet_to_decode array size is less than length -2
+    # this will raise an unhandled exception
+    # shorter = packet_to_decode[:length - 2]
 
+    # strip comma and carriage return
+    shorter = packet_to_decode.strip(',\n')
+    #print("shorter:", shorter)
     varlist = map(hex_to_int, shorter .split(','));
     
     # remove SOH and sequence number
@@ -267,7 +277,8 @@ def decode_panel_info_reply( packet_to_decode ) :
     length = len( packet_to_decode )
 
     # remove checksum from end
-    shorter = packet_to_decode[:length - 3]
+    #shorter = packet_to_decode[:length - 3]
+    shorter = packet_to_decode.strip(',\n')
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -393,7 +404,8 @@ def decode_reply_packet_mxspeak_5( packet_to_decode ) :
 
     length = len( packet_to_decode )
 
-    shorter = packet_to_decode[:length - 3]
+    #shorter = packet_to_decode[:length - 3]
+    shorter = packet_to_decode.strip(',\n')
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -427,8 +439,8 @@ def decode_reply_packet( packet_to_decode ) :
 
     length = len( packet_to_decode )
 
-    shorter = packet_to_decode[:length - 3]
-
+    #shorter = packet_to_decode[:length - 3]
+    shorter = packet_to_decode.strip(',\n')
     varlist = map(hex_to_int, shorter .split(','));
 
     # remove PTP header info
