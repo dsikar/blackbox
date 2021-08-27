@@ -26,7 +26,7 @@ python -m pip install --trusted-host pypi.python.org --trusted-host files.python
 ```
 5. Connect panel COM2 to PC
 6. Verify PC COM port on Device Manager
-7. Edit packetizer/pointinfotest.py to match COM port e.g. COM4
+7. Edit config.py to match e.g. PC_COM_PORT = "COM3"
 8. Run service loop script
 ```
 python service-loop.py
