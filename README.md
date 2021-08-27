@@ -56,3 +56,34 @@ TODO scan devices, decode packets
 0x1,0x3,0x35,0xe4,0x0,0x0,0xfd,0x12,0x0,0x4,0x0,0x95,0x0,0x0,0x0,0xc,0x1,0x0,0x1,0x0,0x1,0x67,0x81,0x0,0x2,0x0,0x1,0xfe,0x1,0x14,0x67,0x10,0x0,0x47,0x0,0x0,0x0,
 0x0,0x9,0x1,0x9,0x0,0x47,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe9,
 ```
+## Running on the Raspberry Pi
+
+1. Clone this repository
+2. Edit config.py, setting IS_RUNNING_ON_PI = True
+3. If using crontab, make sure the path reference in service-check.sh is correct e.g.
+```
+/home/pi/blackbox/service-loop.py
+```
+if the repository was cloned in /home/pi
+4. Edit crontab to point to the correct path e.g.
+```
+* * * * * /home/pi/blackbox/service-check.sh
+```
+
+### Debugging on the Raspberry Pi
+
+1. Stop the crontab by adding a # sign at the start of the line:
+```
+# * * * * * /home/pi/blackbox/service-check.sh
+```
+2. Kill any service-loop.py processes
+```
+$ pgrep -f service-loop
+<SERVICE ID>
+$ sudo kill -9 <SERVICE ID>
+```
+3. Run the service loop manually
+```
+$ python service-loop.py
+```
+4. When debugging is complete, reactivate the crontab by removing the # symbol from the last line (uncommenting crontab entry).
