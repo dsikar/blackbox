@@ -144,6 +144,19 @@ def DecodeAlarmState( InstantAlarmState ) :
   return InstantAlarmStateText;
   
 
+def checkPacketLength(packet_to_decode) :
+    """
+    Check if packet in not the right length
+    Inputs
+        packet_to_decode: command delimited string received from panel
+    Output
+        Error message : string
+    """
+    lenRcv = len(packet_to_decode.split(','))
+    lenExp = config.PACKET_TO_DECODE_LENGTH
+    if(lenRcv != lenExp) :
+        return "Malformed packet received, expected length: {}, received length: {}\n".format(lenExp, lenRcv)
+    return ""
 
 def decode_point_info_reply( packet_to_decode ) : 
     """
@@ -153,6 +166,14 @@ def decode_point_info_reply( packet_to_decode ) :
     """
     global point_poll_sucess
     
+    # print("*** LENGTH OF PACKET:", len(packet_to_decode.split(',')))
+    # ('*** LENGTH OF PACKET:', 57)
+    err_msg = checkPacketLength(packet_to_decode)
+    if(err_msg != ""):
+        writelog(err_msg, logfile)
+        writelog(packet_to_decode, logfile)
+        return
+ 
     point_poll_sucess = True
 
     # length = len( packet_to_decode )

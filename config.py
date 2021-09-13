@@ -33,3 +33,13 @@ cmd = ''
 
 # Logging
 LOGPATH = 'logs'
+
+# TODO
+# We would want something like
+# MX5_PACKET_TO_DECODE_LENGTH = 57
+# MX6_PACKET_TO_DECOD_LENGTH = 58 # assumed to be different
+# then assume a defaulg
+# PACKET TO DECODE_LEGNTH = MX5_PACKETT_TO_DECODE_LENGTH
+# then at runtime, we could check the standard and reassign if different
+# config.PACKET_TO_DECODE_LENGTH = config.MX6_PACKET_TO_DECODE_LENGTH
+PACKET_TO_DECODE_LENGTH = 57 
