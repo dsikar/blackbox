@@ -591,6 +591,9 @@ def PointInformationScan(   ) :
             action = "python packetizer/pointinfotest.py " + packettosend 
             #print(action)
             payload = subprocess.check_output(shlex.split(action));
+            writelog("Payload for point address {} query:\n".format(point_address), logfile)
+            writelog(payload, logfile)
+
             if len(payload) > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
                 # writelog(payload,logfile)
                 # TODO adjust to windows 7/10
@@ -603,8 +606,10 @@ def PointInformationScan(   ) :
                 #print "Payload response to serviced packet : \n"+payload; 
             else:
                 #print("this is the payload" + str(payload))
-                print "No device recorded for this point",
-
+                msg = "No device recorded for point {} \n".format(point_address)
+                print(msg)
+                writelog(msg, logfile)
+ 
             time.sleep(delaybetweenpolls) 
 
         point_address += 1
