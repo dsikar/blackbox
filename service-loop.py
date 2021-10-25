@@ -14,10 +14,31 @@ point_poll_sucess = True;
 
 ptp_sequence = 6
 
+use_mxspeak_6 = True;
+
+
 def hex_to_int( value ) :
 
   return int( value, 16 )
 
+
+def DecodePacketType( packet_id ) :
+
+  PacketTypeText = str( packet_id ) + "ABC";
+  
+  if ( packet_id == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
+    PacketTypeText = "PACKET_ID_POINT_INFO_REQUEST"
+  elif ( packet_id == constants.PACKET_ID_POINT_INFO_REPLY ) : 
+    PacketTypeText = "PACKET_ID_POINT_INFO_REPLY"
+  elif ( packet_id == constants.PACKET_ID_PANEL_INFORMATION ) : 
+    PacketTypeText = "PACKET_ID_PANEL_INFORMATION"      
+  elif ( packet_id == constants.PACKET_ID_PANEL_INFORMATION_REQ ) : 
+    PacketTypeText = "PACKET_ID_PANEL_INFORMATION_REQ"   
+  else :
+    PacketTypeText = "--"
+  
+  return PacketTypeText
+  
 
 def DecodeDeviceType( device_type_id ) :
 
@@ -31,11 +52,12 @@ def DecodeDeviceType( device_type_id ) :
     DeviceTypeText = "855H"      
   elif ( device_type_id == constants.DEVICE_ID_855_PC ) : 
     DeviceTypeText = "855PC"   
+  elif ( device_type_id == constants.DEVICE_ID_850_H ) : 
+    DeviceTypeText = "850H"   
   elif ( device_type_id == 253 ) : 
     DeviceTypeText = "Empty" 
   else :
     DeviceTypeText = "--"
-  
   
   return DeviceTypeText
 
@@ -71,6 +93,7 @@ def DecodeChannelType( channel_type_value ) :
     
   return ChannelTypeText
   
+  
 def DeviceAttribsAtString( device_attribs ) : 
 
   DeviceAttribstext = ""
@@ -83,7 +106,6 @@ def DeviceAttribsAtString( device_attribs ) :
   # bit 5 - unused
   # bit 6 sounder
   # bit 7 isolation allowed
-
 
   return  DeviceAttribsAtString; 
   
@@ -118,6 +140,7 @@ def DecodeAnalogueValueToHuman( unit_type, converted_reading ) :
   
   return RealWorldReading;
   
+  
 def DecodeAlarmState( InstantAlarmState ) :
 
   InstantAlarmStateText = ""
@@ -139,15 +162,13 @@ def DecodeAlarmState( InstantAlarmState ) :
   else :
     InstantAlarmStateText = "--"    
   
-  
-  
   return InstantAlarmStateText;
   
-
 
 def decode_point_info_reply( packet_to_decode ) : 
 
     global point_poll_sucess
+    global use_mxspeak_6;
     
     point_poll_sucess = True
 
@@ -162,102 +183,113 @@ def decode_point_info_reply( packet_to_decode ) :
     varlist.pop(0)
     varlist.pop(0)
     
-    print( "\nPoint Information Reply Packet" )
+    offset = 0
+    if ( use_mxspeak_6 == False) :
+       offset = -1
+    
 
-    point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET ];
-
-    print ( "state       " + str(  varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET ] ) + "     Zero = success")
+    point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET + offset ]
+    loop_number  = varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET + offset ]
+    
+    print( "\nPoint Information Reply Packet :   Loop " + str(loop_number)  + " Point " + str(point_number) )
+    
+    print( "state       " + str(  varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET + offset ] ) + "     Zero = success")
      
-    # Dump packet
-    #for element in range( len( varlist ) ) :
-    #  print ( "[ " + str( element ) + " ]  : " + str( varlist[ element ] ) )
-
-
-    if ( varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET ] == 0 ) : 
-       print ( "LOOP :  " + str( varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET ] ) + " POINT " +  str( varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET ] ))
-
-       print ( "Flags       " + str( varlist[ constants.POINT_REPLY_FLAGS_OFFSET ] ) )
-       print ( "Node        " + str( varlist[ constants.POINT_REPLY_NODE_OFFSET ] ) )
-       print ( "Channel     " + str( varlist[ constants.POINT_REPLY_CHANNEL_OFFSET ] ) )
-       print ( "Chan addr   " + str( varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET ] ) + "    this is the loop number" )
-       print ( "Pnt cat     " + str( varlist[ constants.POINT_REPLY_POINT_CATEGORY_OFFSET ] ) )
-       print ( "Pnt addr    " + str( varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET ] ) )
-       print ( "log part1   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_1_OFFSET ] ) )
-       print ( "log part2   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_2_OFFSET ] ) )
+    if ( varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET + offset ] == 0 ) :
+    
+       # header
+       point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET + offset ]
+       loop_number  = varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET + offset ]    
+       print( "\nPoint Information Reply Packet :   Loop " + str(loop_number)  + " Point " + str(point_number) )
        
-       DeviceTypeAsString = DecodeDeviceType( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET ] )
-       print ( "Device type " + str( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET ] ) + "    " + DeviceTypeAsString )
+       print ( "Flags       " + str( varlist[ constants.POINT_REPLY_FLAGS_OFFSET + offset] ) )
+       print ( "Node        " + str( varlist[ constants.POINT_REPLY_NODE_OFFSET  + offset] ) )
+       print ( "Channel     " + str( varlist[ constants.POINT_REPLY_CHANNEL_OFFSET + offset] ) )
+       print ( "Chan addr   " + str( varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET  + offset] ) + "    this is the loop number" )
+       print ( "Pnt cat     " + str( varlist[ constants.POINT_REPLY_POINT_CATEGORY_OFFSET + offset] ) )
+       print ( "Pnt addr    " + str( varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET  + offset]  ) )
+       print ( "log part1   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_1_OFFSET + offset] ) )
+       print ( "log part2   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_2_OFFSET + offset] ) )
+       
+       DeviceTypeAsString = DecodeDeviceType( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET + offset ] )
+       print ( "Device type " + str( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET + offset ] ) + "    " + DeviceTypeAsString )
        
        # TODO Mike Mayhew - we need to define DecodeDeviceAttibs
        # DeviceAttribsAtString = DecodeDeviceAttibs( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET ] )
-       print ( "Attribs     " + str( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET ] ) )
-       print ( "group pt1   " + str( varlist[ constants.POINT_REPLY_GROUP_PT1_OFFSET ] ) )
-       print ( "group pt2   " + str( varlist[ constants.POINT_REPLY_GROUP_PT2_OFFSET ] ) )
-       print ( "Area type   " + str( varlist[ constants.POINT_REPLY_AREA_TYPE_OFFSET ] ) )
-       print ( "Area nmbr   " + str( varlist[ constants.POINT_REPLY_AREA_NUMNER ] ) )
-       print ( "Sector      " + str( varlist[ constants.POINT_REPLY_SECTOR ] ) + "    254 if not sector")
-       print ( "Loop type   " + str( varlist[ constants.POINT_REPLY_LOOP_TYPE ] ) + "      1 is MX")
-       print ( "raw dev id  " + str( varlist[ constants.POINT_REPLY_RAW_DEV_ID ] ) )
+       print ( "Attribs     " + str( varlist[ constants.POINT_REPLY_ATTRIBS_OFFSET + offset ] ) )
+       print ( "group pt1   " + str( varlist[ constants.POINT_REPLY_GROUP_PT1_OFFSET + offset ] ) )
+       print ( "group pt2   " + str( varlist[ constants.POINT_REPLY_GROUP_PT2_OFFSET + offset ] ) )
+       print ( "Area type   " + str( varlist[ constants.POINT_REPLY_AREA_TYPE_OFFSET + offset ] ) )
+       print ( "Area nmbr   " + str( varlist[ constants.POINT_REPLY_AREA_NUMNER + offset ] ) )
+       print ( "Sector      " + str( varlist[ constants.POINT_REPLY_SECTOR     + offset] ) + "    254 if not sector")
+       print ( "Loop type   " + str( varlist[ constants.POINT_REPLY_LOOP_TYPE  + offset] ) + "      1 is MX")
+       print ( "raw dev id  " + str( varlist[ constants.POINT_REPLY_RAW_DEV_ID + offset] ) )
 
 
-       print ( "Raw 1       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_1 ] ) )
-       print ( "Raw 2       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_2 ] ) )
-       print ( "Raw 3       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_3 ] ) )
+       print ( "Raw 1       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_1 + offset ] ) )
+       print ( "Raw 2       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_2 + offset ] ) )
+       print ( "Raw 3       " + str( varlist[ constants.POINT_REPLY_RAW_ANALOGUE_3 + offset ] ) )
               
-       print ( "LTA flag    " + str( varlist[ constants.POINT_REPLY_LTA_FLAGS ] ) )
-       print ( "Raw LTA     " + str( varlist[ constants.POINT_REPLY_RAW_LTA ] ) )
-       print ( "Dirty       " + str( varlist[ constants.POINT_REPLY_DIRTINESS ] ) )       
+       print ( "LTA flag    " + str( varlist[ constants.POINT_REPLY_LTA_FLAGS + offset ] ) )
+       print ( "Raw LTA     " + str( varlist[ constants.POINT_REPLY_RAW_LTA   + offset ] ) )
+       print ( "Dirty       " + str( varlist[ constants.POINT_REPLY_DIRTINESS + offset ] ) )       
        
        
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 ] )
-       print ( "units  1    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 ] ) + "  " + ChannelTypeAsString)
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 ] )
-       print ( "units  2    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 ] ) + "  " + ChannelTypeAsString )
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 ] )
-       print ( "units  3    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 ] ) + "  " + ChannelTypeAsString)
+       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset ] )
+       print ( "units  1    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset] ) + "  " + ChannelTypeAsString)
+       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset ] )
+       print ( "units  2    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset] ) + "  " + ChannelTypeAsString )
+       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset ] )
+       print ( "units  3    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset] ) + "  " + ChannelTypeAsString)
        
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 ], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 ] )
-       print ( "Conv 1      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 ] ) + "  " + DisplayReadingAsString )
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 ], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 ] )
-       print ( "Conv 2      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 ] ) + "  " + DisplayReadingAsString)
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 ], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 ] )
-       print ( "Conv 3      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 ] ) + "  " + DisplayReadingAsString )
+       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 + offset ] )
+       print ( "Conv 1      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 + offset ] ) + "  " + DisplayReadingAsString )
+       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 + offset ] )
+       print ( "Conv 2      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 + offset ] ) + "  " + DisplayReadingAsString)
+       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 + offset ] )
+       print ( "Conv 3      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 + offset ] ) + "  " + DisplayReadingAsString )
        
-       InstantAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE ] )
-       print ( "now Alarm   " + str( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE ] ) + "   " + InstantAlarmStateAsString )
-       print ( "now Fault   " + str( varlist[ constants.POINT_REPLY_INSTANT_FAULT ] ) )
+       InstantAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE + offset] )
+       print ( "now Alarm   " + str( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE + offset ] ) + "   " + InstantAlarmStateAsString )
+       print ( "now Fault   " + str( varlist[ constants.POINT_REPLY_INSTANT_FAULT + offset ] ) )
        
-       ConfirmedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE ] )
-       print ( "Confirm Alm " + str( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE ] ) + "   " + ConfirmedAlarmStateAsString )
-       print ( "Confirm Flt " + str( varlist[ constants.POINT_REPLY_CONFIRMED_FAULT ] ) )
+       ConfirmedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE + offset] )
+       print ( "Confirm Alm " + str( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE + offset ] ) + "   " + ConfirmedAlarmStateAsString )
+       print ( "Confirm Flt " + str( varlist[ constants.POINT_REPLY_CONFIRMED_FAULT + offset ] ) )
        
-       AckedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_ACKED_ACTIVE ] )
-       print ( "Acked Alm   " + str( varlist[ constants.POINT_REPLY_ACKED_ACTIVE ] ) + "   " + AckedAlarmStateAsString )
-       print ( "Acked Flt   " + str( varlist[ constants.POINT_REPLY_ACKED_FAULT ] ) )
+       AckedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_ACKED_ACTIVE + offset] )
+       print ( "Acked Alm   " + str( varlist[ constants.POINT_REPLY_ACKED_ACTIVE + offset ] ) + "   " + AckedAlarmStateAsString )
+       print ( "Acked Flt   " + str( varlist[ constants.POINT_REPLY_ACKED_FAULT + offset ] ) )
        
-       print ( "OP Is Forced" + str( varlist[ constants.POINT_REPLY_IS_OUTPUT_FORCED ] ) )
-       print ( "OP Unforced " + str( varlist[ constants.POINT_REPLY_OUTPUT_UNFORCED_STATE ] ) )
-       print ( "OP Forced   " + str( varlist[ constants.POINT_REPLY_OUTPUT_FORCED_STATE ] ) )
+       print ( "OP Is Forced" + str( varlist[ constants.POINT_REPLY_IS_OUTPUT_FORCED + offset ] ) )
+       print ( "OP Unforced " + str( varlist[ constants.POINT_REPLY_OUTPUT_UNFORCED_STATE + offset ] ) )
+       print ( "OP Forced   " + str( varlist[ constants.POINT_REPLY_OUTPUT_FORCED_STATE + offset ] ) )
 
         
        print ( "----" )
+       
+       # WE ARE ONLY LOGGING GOOD REPLIES
+       # Replies where there is a device.
+
+       packet_to_log = ""
+        
+       for el in varlist:
+          packet_to_log += str(el) + ","
+          
+       packet_to_log += "\n"  
+          
+       writelog(packet_to_log,logfile)      
+       
+       #print("LOG THIS [new]: \n" + packet_to_log )
+       
     else:
        point_poll_sucess = False
-    
-    #print( "Full packet reply : " + packet_to_decode )
 
-    
-    
-    #print("LOG THIS [orig]: \n" + packet_to_decode )
-    packet_to_log = ""
-    
-    for el in varlist:
-      packet_to_log += str(el) + ","
-    #print("LOG THIS [new]: \n" + packet_to_log )
     
 def decode_panel_info_reply( packet_to_decode ) :     
     
     global point_poll_sucess
+    global use_mxspeak_6;
     
     point_poll_sucess = True
 
@@ -276,6 +308,7 @@ def decode_panel_info_reply( packet_to_decode ) :
        
     
     # get rid of the header
+
     varlist.pop(0)
     varlist.pop(0)
     varlist.pop(0)
@@ -285,6 +318,13 @@ def decode_panel_info_reply( packet_to_decode ) :
     varlist.pop(0)
     varlist.pop(0)
     varlist.pop(0)
+    
+    # MXSpeak 6 header is 4 bytes longer
+    if ( use_mxspeak_6 ) :
+        varlist.pop(0)
+        varlist.pop(0)
+        varlist.pop(0)
+        varlist.pop(0)
     
       
     print( "Time Date (secs): " + str(varlist[0]) + " " + str(varlist[1]) + " " + str(varlist[2]) + " " + str( varlist[3]) )
@@ -295,48 +335,160 @@ def decode_panel_info_reply( packet_to_decode ) :
     print( "equipment       : " + str(varlist[12]) + " " + str(varlist[13]))
     print( "compat          : " + str(varlist[14]) + " " + str(varlist[15]))
     print( "MXSpeak         : " + str(varlist[16]) + "    - 0 MXspeak 5, 1 MXSpeak 6 " )
-      
+    
+    if ( varlist[16] == 1 ) :
+        # print( "Set to MXspeak 6")
+        use_mxspeak_6 = True;
+    
+
     print ( "\n" )       
     
-def send_packet_after_panel_info( send_packet_after_panel_info ) :
 
-    # Packet type is 209
+
+def decode_reply_packet( packet_to_decode ) :
+
+    global use_mxspeak_6;
+
+    length = len( packet_to_decode )
+
+    shorter = packet_to_decode[:length - 3]
+
+    varlist = map(hex_to_int, shorter .split(','));
+
+
+    # remove PTP header info
+    varlist.pop(0)
+    varlist.pop(0)
+
+    print_me = "PACKET TO DECODE : "
+    for el in varlist:
+       print_me += "," + str(el);
+    
+    print( print_me )
+    
+    PacketID = 0;
+    
+    #print ( "Length  : " + str( varlist [ 0 ] ))
+    #print ( "MXSpeak 6 indicator  : " + str( varlist [ 1 ] ) + " - 228 indicates MXSpeak 6")
+    if ( varlist [ 1 ] == 228 ) : 
+        use_mxspeak_6 = True;
+        #print( "SET MXSPEAK 6");
+        PacketID = varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ];
+        #print ( "Reply  MX6 : " + str( PacketID ) + "  " + DecodePacketType(PacketID))
+    else : 
+        use_mxspeak_6 = False;
+        #print( "SET MXSPEAK 5");
+        PacketID = varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ];
+        #print ( "Reply  MX5 : " + str( PacketID ) + "  " + DecodePacketType(PacketID))
+
+   
+    # --------------------
+
+
+    if ( PacketID == constants.PACKET_ID_POINT_INFO_REPLY ) : 
+      decode_point_info_reply( packet_to_decode ) 
+      
+    
+    if ( PacketID == constants.PACKET_ID_PANEL_INFORMATION ) : 
+      decode_panel_info_reply( packet_to_decode ) 
+      
+    else :
+      print ( "Reply Packet Type " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
+
+
+def FormRequestPacket( loop, point  ) :
 
     # without PTP framing
     # without checksum
     #
- 
-   
-    # length
-    # destination node             = 0 local
-    # channel                      = 0
-    # destination channel address  = 0
-    # destination task             - 1 local
-    # source channel               = 0
-    # source task                  = 0
-    # marker                       = any thing - 123
-    # packet ID                    = 209
+    # L - length
+    # SIG - MXSpeak 6 signature, (228) only if MXSpeak 6
+    # packet stuff starts at 12
     #
-    # DATA
-    # ----
-    # Control type       = 3 - request project details
-    # addtional features = 0
-
-    #               L  D C A D T S  M  PK  c a
-    SamplePacket = "11,0,0,0,1,0,0,123,209,3,0"
+    # PACKET_ID_POINT_INFO_REQUEST = 148 - hex95
+    #
+    # MXSPEAK 6
+    # 228 - mxspeak 6 indicator
+    # 0   - network node
+    # 0   - channel
+    # 0   - destination channel address
+    # 4   - deatination task
+    # 253 - source channel address 
+    # 146 - source task
+    # 0   - marker
+    # 148 - packet type - point info requred.
+    # 0   - reserved -  zero
+    #
     
+    
+    # MXSPEAK 5
+    # 0   - DN destination node
+    # 0   - channel
+    # 0   - destination channel address
+    # 1   - destination task
+    # 0   - source channel address 
+    # 0   - source task
+    # 0   - marker
+    # 148 - packet type - point info requred.
+
+    
+    #                        9,     0,  0 ,0,  1   ,0,  0,  123,26
+    
+    #
+    #                        L  SIG DN SN DCH  DT SCH  STSK MK PKT RS \/ packet is here
+    SamplePacket_mxspeak6 = "58,228,0, 0, 0,  4,  253, 146, 0, 148,0, 12,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
+    SamplePacket_mxspeak5 = "57    ,0, 0, 0,  1,    0,   0, 0, 148,   0 , 0 ,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
+
 
     global ptp_sequence
+    global use_mxspeak_6
 
-    varlist = map(int, SamplePacket .split(','));
+    if ( use_mxspeak_6 ) : 
+        varlist = map(int, SamplePacket_mxspeak6 .split(','));
+        #print( "USING MXSPEAK 6")
+    else : 
+        varlist = map(int, SamplePacket_mxspeak5 .split(','));
+        #print( "USING MXSPEAK 5")
 
-    length = len( varlist )
+    detail_display = 0
     
-    packet_to_send = "error"
+    # to be on the safe side
+    # check the packet type.
+    
+    if ( use_mxspeak_6 ) : 
+        if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
+            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] = point
+            varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET  ] = loop
+            
+            if ( config.DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW == 1 ) :
+                print( "\nRequest -  Loop : " + str( loop ) + ",  Point : " + str( point ) )            
 
-  
+                if ( config.DISPLAY_POINT_REQUEST_PACKETS_DETAIL == 1 ) :
+                   print ( "Point Information Request : Node      " + str(  varlist[ constants.POINT_INFO_REQUEST_NODE_OFFSET ] ) )
+                   print ( "Point Information Request : channel   " + str(  varlist[ constants.POINT_INFO_REQUEST_CHANNEL_OFFSET ] )  + "   MXSpeak 6 12 is main processor")
+                   print ( "Point Information Request : chan addr " + str(  varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET ] )  + "   Channel 12, channel addr 1 = loop A")
+                   print ( "Point Information Request : pnt cat   " + str(  varlist[ constants.POINT_INFO_REQUEST_POINT_CATEGORY_OFFSET ] )  + "   0 - real points")
+                   print ( "Point Information Request : pnt addr  " + str(  varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] ) )
+                   print ( "Point Information Request : log pt 1  " + str(  varlist[ constants.POINT_INFO_REQUEST_LOGICAL_ADDR_PT1_OFFSET ] ) )
+                   print ( "Point Information Request : log pt 2  " + str(  varlist[ constants.POINT_INFO_REQUEST_LOGICAL_ADDR_PT2_OFFSET ] ) )
+                   print ( "Point Information Request : dev cat   " + str(  varlist[ constants.POINT_INFO_REQUEST_DEVICE_CATEGORY_OFFSET ] ) )
+
+                else: 
+                   # If here something went wrong.  This function is only for point info request packets.
+                   print ( "xx Packet Type " + str(  varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
+
+    else :
+        # MXSPEAK 5
+        #
+        #
+        if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
+
+            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET_MXSPEAK_5 ] = point
+            varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET_MXSPEAK_5  ] = loop
+
+
     # Start with SOH and low level sequence number.
-    packet_to_send = "1" # + str ( ptp_sequence )
+    result = "1" # + str ( ptp_sequence )
 
     # Add the PTP sequence number to the packet.
     varlist.insert(0, ptp_sequence)
@@ -347,169 +499,17 @@ def send_packet_after_panel_info( send_packet_after_panel_info ) :
     
     checksum = 0
     for el in varlist:
+
       checksum += el
-      packet_to_send += "," + str(el);
+      result += "," + str(el);
 
     checksum = checksum % 256
 
     varlist.append( checksum )
 
-    packet_to_send += "," + str(checksum)
+    #print( "Calculated checksum: " + str(checksum))
 
-    print( "Constructed Packet to Checker connect req info : \n" + packet_to_send )
-    
-    
-    action = "python packetizer/pointinfotest.py " + packet_to_send 
-
-
-    payload = subprocess.check_output(shlex.split(action));
-    # logging raw data for now, decoded packet to follow
-
-
-    if len(payload) > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
-        # writelog(payload,logfile)
-        # TODO adjust to windows 7/10
-        print("Reply from Panel, Length " + str( len( payload ) ) )
-        #print(payload)
-        
-        if (len(payload) > 10) :
-          decode_reply_packet_mxspeak_5(payload) 
-
-        
-        print "Payload response to connect info request : \n"+payload; 
-    else:
-        #print("this is the payload" + str(payload))
-        print "No reply",
-  
-    
-
-    return payload 
-
-
-def decode_reply_packet_mxspeak_5( packet_to_decode ) :
-
-    length = len( packet_to_decode )
-
-    shorter = packet_to_decode[:length - 3]
-
-    varlist = map(hex_to_int, shorter .split(','));
-    
-    # remove PTP header info
-    varlist.pop(0)
-    varlist.pop(0)
-    
-    
-    packet_entry = "Packet to decode : "
-    for el in varlist:
-      packet_entry +=  str(el) + ","
-
-
-    print( "Packet to decode : - " + packet_entry )
-    
-    
-    # --------------------
-    print ( "\nReply Packet Type (MX5) : " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] ) )
-
-
-    if ( str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] == constants.PACKET_ID_PANEL_INFORMATION )) : 
-      decode_panel_info_reply( packet_to_decode ) 
-      send_packet_after_panel_info( packet_to_decode )
-    else :
-      print ( "yyy Reply Packet Type " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] ) )
-
-
-
-
-def decode_reply_packet( packet_to_decode ) :
-
-    length = len( packet_to_decode )
-
-    shorter = packet_to_decode[:length - 3]
-
-    varlist = map(hex_to_int, shorter .split(','));
-
-    # remove PTP header info
-    varlist.pop(0)
-    varlist.pop(0)
-    
-    # --------------------
-    print ( "Reply Packet Type : " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
-
-
-    if ( str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] == constants.PACKET_ID_POINT_INFO_REPLY )) : 
-      decode_point_info_reply( packet_to_decode ) 
-    else :
-      print ( "Reply Packet Type " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
-
-
-def FormRequestPacket( loop, point  ) :
-
-    # without PTP framing
-    # without checksum
-    #
-    SamplePacket = "58,228,0,0,0,4,253,146,0,148,0,12,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
-
-    # With SOH, sequence and checksum
-    #          "1,5,58,228,0,0,0,4,253,146,0,148,0,12,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10,199"
-
-
-    global ptp_sequence
-
-    varlist = map(int, SamplePacket .split(','));
-
-    detail_display = 0
-    
-    
-    # to be on the safe side
-    # check the packet type.
-    
-    if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
-        varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] = point
-        varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET ]  = loop
-        
-        if ( config.DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW == 1 ) :
-            print( "\nRequest -  Loop : " + str( loop ) + ",  Point : " + str( point ) )            
-
-            if ( config.DISPLAY_POINT_REQUEST_PACKETS_DETAIL == 1 ) :
-               print ( "Point Information Request : Node      " + str(  varlist[ constants.POINT_INFO_REQUEST_NODE_OFFSET ] ) )
-               print ( "Point Information Request : channel   " + str(  varlist[ constants.POINT_INFO_REQUEST_CHANNEL_OFFSET ] )  + "   MXSpeak 6 12 is main processor")
-               print ( "Point Information Request : chan addr " + str(  varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET ] )  + "   Channel 12, channel addr 1 = loop A")
-               print ( "Point Information Request : pnt cat   " + str(  varlist[ constants.POINT_INFO_REQUEST_POINT_CATEGORY_OFFSET ] )  + "   0 - real points")
-               print ( "Point Information Request : pnt addr  " + str(  varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] ) )
-               print ( "Point Information Request : log pt 1  " + str(  varlist[ constants.POINT_INFO_REQUEST_LOGICAL_ADDR_PT1_OFFSET ] ) )
-               print ( "Point Information Request : log pt 2  " + str(  varlist[ constants.POINT_INFO_REQUEST_LOGICAL_ADDR_PT2_OFFSET ] ) )
-               print ( "Point Information Request : dev cat   " + str(  varlist[ constants.POINT_INFO_REQUEST_DEVICE_CATEGORY_OFFSET ] ) )
-
-            else: 
-               # If here something went wrong.  This function is only for point info request packets.
-               print ( "Packet Type " + str(  varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
-
-
-        # Start with SOH and low level sequence number.
-        result = "1" # + str ( ptp_sequence )
-
-        # Add the PTP sequence number to the packet.
-        varlist.insert(0, ptp_sequence)
- 
-        ptp_sequence += 1
-        if ptp_sequence > 8 : 
-         ptp_sequence = 5
-        
-        checksum = 0
-        for el in varlist:
-
-          checksum += el
-          result += "," + str(el);
-
-        checksum = checksum % 256
-
-        varlist.append( checksum )
-
-
-        #print( "Calculated checksum: " + str(checksum))
-
-        result += "," + str(checksum)
-
+    result += "," + str(checksum)
 
     #print( "Constructed Packet to send : \n" + result )
 
@@ -549,6 +549,7 @@ def PointInformationScan(   ) :
             # TO DO
             # Not ideal, but adjust the packet for the loop and point address
             packettosend = FormRequestPacket( current_loop, point_address )
+            print( "Sending Request for  - Loop " + str( current_loop ) + " Pnt " + str( point_address ) )
             
             #print(  packettosend  )
 
@@ -567,7 +568,7 @@ def PointInformationScan(   ) :
                 #print "Payload response to serviced packet : \n"+payload; 
             else:
                 #print("this is the payload" + str(payload))
-                print "No device recorded for this point",
+                print "No device recorded for this point"
 
             time.sleep(delaybetweenpolls) 
 
@@ -589,10 +590,10 @@ def PointInformationScan(   ) :
                     delaybetweenpolls = min_time_between_polls / x
                     print( "Updated poll time : " + str( delaybetweenpolls ) )
                    
-              
 
+def FormOpeningRequestPacket(   ) :
 
-def FormCheckerRequestPacket(   ) :
+    print( "Form request packet type 26" )
 
     # Packet type is 26
     # Destination configuration manager = ID 3
@@ -652,15 +653,13 @@ def FormCheckerRequestPacket(   ) :
 
     return result 
 
-def CheckerScanMode( ) :
-
-    print( "CHECKER MODE" )
+def OpeningPacketsMode( ) :
 
     print( "\nRequest panel info\n")
-    RegistrationRequest =  FormCheckerRequestPacket(  ) 
+    PanelInfoRequest =  FormOpeningRequestPacket(  ) 
   
 
-    action = "python packetizer/pointinfotest.py " + RegistrationRequest 
+    action = "python packetizer/pointinfotest.py " + PanelInfoRequest 
 
 
     payload = subprocess.check_output(shlex.split(action));
@@ -671,7 +670,8 @@ def CheckerScanMode( ) :
         print(payload)
         
         if (len(payload) > 10) :
-          decode_reply_packet_mxspeak_5(payload) 
+          print( "HERE" )
+          decode_reply_packet(payload) 
         #  if( point_poll_sucess == False) :
         #    poll_list[ poll_list_index ] = False
 
@@ -682,9 +682,9 @@ def CheckerScanMode( ) :
   
     if len(payload) == 2:
   
-        RegistrationRequest =  FormCheckerRequestPacket(  ) 
+        PanelInfoRequest =  FormOpeningRequestPacket(  ) 
 
-        action = "python packetizer/pointinfotest.py " + RegistrationRequest 
+        action = "python packetizer/pointinfotest.py " + PanelInfoRequest 
 
         payload = subprocess.check_output(shlex.split(action));
         if len(payload) > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
@@ -692,7 +692,7 @@ def CheckerScanMode( ) :
             #print(payload)
             
             if (len(payload) > 10) :
-              decode_reply_packet_mxspeak_5(payload)(payload) 
+              decode_reply_packet(payload)
          
               
             #  if( point_poll_sucess == False) :
@@ -702,6 +702,7 @@ def CheckerScanMode( ) :
         else:
             #print("this is the payload" + str(payload))
             print "No device recorded for this point",
+
 
 #
 # START OF MAIN
@@ -725,15 +726,52 @@ checkLogDir()
 logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
 logfile += '_BlackBox.log'
 
+OpeningPacketsMode()
+
 print(entry)
 writelog(entry, logfile)
+ 
+PointInformationScan()
 
-if (config.MODE_IS == config.POINT_INFO_SCAN) : 
-  PointInformationScan()
 
 
-if (config.MODE_IS == config.CHECKER_MODE) : 
-  CheckerScanMode()
+          
+   
+
+
+          
+
++ '\n\n'
+print(entry)
+
+
+# check logging directory
+checkLogDir() 
+
+logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
+logfile += '_BlackBox.log'
+
+OpeningPacketsMode()
+
+print(entry)
+writelog(entry, logfile)
+ 
+PointInformationScan()
+
+
+               
+
+
+          
+     
+
+
+          
+file)
+ 
+PointInformationScan()
+
+
                
 
 
