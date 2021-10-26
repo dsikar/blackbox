@@ -1,0 +1,33 @@
+Commit: af1d5a0e03
+
+Command: python service-loop.py
+
+Error message: 
+
+Request -  Loop : 8,  Point : 250
+Packet Type 148
+Reply from Panel, Length 240
+Reply Packet Type : 149
+
+Point Information Reply Packet
+state       1     Zero = success
+Number of devices replying to poll 1
+Updated poll time : 5
+
+Request -  Loop : 1,  Point : 1
+Packet Type 148
+Reply from Panel, Length 238
+Traceback (most recent call last):
+  File "service-loop.py", line 735, in <module>
+    PointInformationScan()
+  File "service-loop.py", line 567, in PointInformationScan
+    decode_reply_packet(payload) 
+  File "service-loop.py", line 432, in decode_reply_packet
+    varlist = map(hex_to_int, shorter .split(','));
+  File "service-loop.py", line 19, in hex_to_int
+    return int( value, 16 )
+ValueError: invalid literal for int() with base 16: '0x'
+
+Note: service-loop.py not running through crontab
+
+

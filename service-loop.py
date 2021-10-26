@@ -6,171 +6,40 @@ import datetime
 import time
 import config
 import constants
+import utils
 
-
-poll_list = [ True, True ]
 
 point_poll_sucess = True;
 
-ptp_sequence = 6
+ptp_sequence = constants.MIN_PTP_SEQUENCE
 
 use_mxspeak_6 = True;
+
+current_node = constants.MIN_NETWORK_NODE
+
+glb_reply_indicates_loop_not_there = False
+glb_reply_indicates_no_more_points_on_loop = False
+
+
+glb_point_info_client_number = 0
 
 
 def hex_to_int( value ) :
 
   return int( value, 16 )
-
-
-def DecodePacketType( packet_id ) :
-
-  PacketTypeText = str( packet_id ) + "ABC";
-  
-  if ( packet_id == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
-    PacketTypeText = "PACKET_ID_POINT_INFO_REQUEST"
-  elif ( packet_id == constants.PACKET_ID_POINT_INFO_REPLY ) : 
-    PacketTypeText = "PACKET_ID_POINT_INFO_REPLY"
-  elif ( packet_id == constants.PACKET_ID_PANEL_INFORMATION ) : 
-    PacketTypeText = "PACKET_ID_PANEL_INFORMATION"      
-  elif ( packet_id == constants.PACKET_ID_PANEL_INFORMATION_REQ ) : 
-    PacketTypeText = "PACKET_ID_PANEL_INFORMATION_REQ"   
-  else :
-    PacketTypeText = "--"
-  
-  return PacketTypeText
-  
-
-def DecodeDeviceType( device_type_id ) :
-
-  DeviceTypeText = "Unknown"
-  
-  if ( device_type_id == constants.DEVICE_ID_855_PH ) : 
-    DeviceTypeText = "855PH"
-  elif ( device_type_id == constants.DEVICE_ID_855_P ) : 
-    DeviceTypeText = "855P"
-  elif ( device_type_id == constants.DEVICE_ID_855_H ) : 
-    DeviceTypeText = "855H"      
-  elif ( device_type_id == constants.DEVICE_ID_855_PC ) : 
-    DeviceTypeText = "855PC"   
-  elif ( device_type_id == constants.DEVICE_ID_850_H ) : 
-    DeviceTypeText = "850H"   
-  elif ( device_type_id == 253 ) : 
-    DeviceTypeText = "Empty" 
-  else :
-    DeviceTypeText = "--"
-  
-  return DeviceTypeText
-
-
-def DecodeChannelType( channel_type_value ) : 
-
-  ChannelTypeText = "Unknown"
-  
-  if ( channel_type_value == constants.CHANNEL_TYPE_INVALID ) : 
-    ChannelTypeText = "N/A"
-  elif ( channel_type_value == constants.CHANNEL_TYPE_DEGREES_C ) : 
-    ChannelTypeText = "oC"
-  elif ( channel_type_value == constants.CHANNEL_TYPE_DEGREES_F ) : 
-    ChannelTypeText = "oF"      
-  elif ( channel_type_value == constants.CHANNEL_TYPE_PPM ) : 
-    ChannelTypeText = "ppm"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_PERCENT_FOOT ) : 
-    ChannelTypeText = "%ft"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_PERCENT_METER ) : 
-    ChannelTypeText = "%m"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_Y_VALUE ) : 
-    ChannelTypeText = "Y Value"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_AMPS ) : 
-    ChannelTypeText = "Amps"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_VOLTS ) : 
-    ChannelTypeText = "Volts"   
-  elif ( channel_type_value == constants.CHANNEL_TYPE_NOT_INSTALLED ) : 
-    ChannelTypeText = "Not Installed"       
-  elif ( channel_type_value == constants.CHANNEL_TYPE_MILLI_AMP ) : 
-    ChannelTypeText = "mA"   
-  else :
-    ChannelTypeText = "--"
-    
-  return ChannelTypeText
-  
-  
-def DeviceAttribsAtString( device_attribs ) : 
-
-  DeviceAttribstext = ""
-
-  # bit 0 supports input
-  # bit 1 supports output
-  # bit 2 solo
-  # bit 3 base of split
-  # bit 4 part of split
-  # bit 5 - unused
-  # bit 6 sounder
-  # bit 7 isolation allowed
-
-  return  DeviceAttribsAtString; 
-  
-def DecodeAnalogueValueToHuman( unit_type, converted_reading ) : 
-
-  RealWorldReading = "??"
-  
-  if ( unit_type == constants.CHANNEL_TYPE_INVALID ) : 
-    RealWorldReading = "--"
-  elif ( unit_type == constants.CHANNEL_TYPE_DEGREES_C ) : 
-    RealWorldReading = str( converted_reading - 50 ) + DecodeChannelType( unit_type ) 
-  elif ( unit_type == constants.CHANNEL_TYPE_DEGREES_F ) : 
-    RealWorldReading = str( converted_reading ) + DecodeChannelType( unit_type ) 
-  elif ( unit_type == constants.CHANNEL_TYPE_PPM ) : 
-    RealWorldReading = str( converted_reading ) + DecodeChannelType( unit_type )     
-  elif ( unit_type == constants.CHANNEL_TYPE_PERCENT_FOOT ) : 
-    RealWorldReading = str( converted_reading / 10 ) + DecodeChannelType( unit_type )  
-  elif ( unit_type == constants.CHANNEL_TYPE_PERCENT_METER ) : 
-    RealWorldReading = str( converted_reading / 10 ) + DecodeChannelType( unit_type )     
-  elif ( unit_type == constants.CHANNEL_TYPE_Y_VALUE ) : 
-    RealWorldReading = str( converted_reading / 100 ) + DecodeChannelType( unit_type )   
-  elif ( unit_type == constants.CHANNEL_TYPE_AMPS ) : 
-    RealWorldReading = str( ( converted_reading - 100 ) / 5 ) + DecodeChannelType( unit_type ) 
-  elif ( unit_type == constants.CHANNEL_TYPE_VOLTS ) : 
-    RealWorldReading = str( converted_reading / 5 ) + DecodeChannelType( unit_type )    
-  elif ( unit_type == constants.CHANNEL_TYPE_NOT_INSTALLED ) : 
-    RealWorldReading = "- -"       
-  elif ( unit_type == constants.CHANNEL_TYPE_MILLI_AMP ) : 
-    RealWorldReading = str( converted_reading / 5 ) + DecodeChannelType( unit_type ) 
-  else :
-    RealWorldReading = "--"
-  
-  return RealWorldReading;
-  
-  
-def DecodeAlarmState( InstantAlarmState ) :
-
-  InstantAlarmStateText = ""
-  
-  if ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_CLEAR ) : 
-    InstantAlarmStateText = "Clear"
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_PRE_ALARM ) : 
-    InstantAlarmStateText = "Pre-Alarm"
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_VERIFYING ) : 
-    InstantAlarmStateText = "Verifying"      
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_ACTIVE ) :
-    InstantAlarmStateText = "Active"      
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_RESETTING ) :
-    InstantAlarmStateText = "Resetting"      
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_TEST ) :
-    InstantAlarmStateText = "Resetting"  
-  elif ( InstantAlarmState == constants.POINT_REPLY_INSTANT_ALARM_STATE_WARNING ) :
-    InstantAlarmStateText = "Warning"  
-  else :
-    InstantAlarmStateText = "--"    
-  
-  return InstantAlarmStateText;
   
 
 def decode_point_info_reply( packet_to_decode ) : 
 
     global point_poll_sucess
     global use_mxspeak_6;
+    global glb_reply_indicates_loop_not_there 
+    global glb_point_info_client_number
+    global glb_reply_indicates_no_more_points_on_loop
     
+    glb_reply_indicates_loop_not_there = False
     point_poll_sucess = True
+
 
     length = len( packet_to_decode )
 
@@ -184,23 +53,69 @@ def decode_point_info_reply( packet_to_decode ) :
     varlist.pop(0)
     
     offset = 0
+    node_number  = varlist[ constants.POINT_REPLY_NODE_OFFSET_MXSPEAK_6 ];
     if ( use_mxspeak_6 == False) :
        offset = -1
+       node_number  = varlist[ constants.POINT_REPLY_NODE_OFFSET_MXSPEAK_5 ];
     
-
+ 
     point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET + offset ]
     loop_number  = varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET + offset ]
     
-    print( "\nPoint Information Reply Packet :   Loop " + str(loop_number)  + " Point " + str(point_number) )
+    # zero is success 
+    state = varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET + offset ]
     
-    print( "state       " + str(  varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET + offset ] ) + "     Zero = success")
-     
-    if ( varlist[ constants.POINT_REPLY_HIGH_LEVEL_STATUS_OFFSET + offset ] == 0 ) :
+    if ( state == 0 ) : 
+    
+      glb_point_info_client_number = ( varlist[ constants.POINT_REPLY_CLIENT_KEY_1 + offset ] * 256 ) + varlist[ constants.POINT_REPLY_CLIENT_KEY_2 + offset ]
+      print( "\nClient code : " + str( glb_point_info_client_number ))
+    
+      print( "\nPoint Information Reply Packet : Node " + str(node_number) + " Loop " + str(loop_number)  + " Point " + str(point_number) )
+      
+      glb_reply_indicates_no_more_points_on_loop = False
+    else : 
+      fault_state =  varlist[ constants.POINT_REPLY_FLAGS_OFFSET + offset] 
+      print( "\nPoint Information Reply Packet : Request invalid (point not in config)  (Flags " + str( fault_state ) + ")" )
+      
+      glb_reply_indicates_no_more_points_on_loop = True
+      print( "Scan Complete - move to next loop" )
+
+      
+    if ( state == 0 ):
     
        # header
        point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET + offset ]
        loop_number  = varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET + offset ]    
-       print( "\nPoint Information Reply Packet :   Loop " + str(loop_number)  + " Point " + str(point_number) )
+       #print( "\nPoint Information Reply Packet :   Node " + str(node_number) + " Loop " + str(loop_number)  + " Point " + str(point_number) )
+       
+        
+       print ( "----" )
+       
+       # WE ARE ONLY LOGGING GOOD REPLIES
+       # Replies where there is a device.
+
+       packet_to_log = ""
+        
+       for el in varlist:
+          packet_to_log += str(el) + ","
+          
+       packet_to_log += "\n"  
+          
+       writelog(packet_to_log,logfile)      
+       
+       #print("LOG THIS [new]: \n" + packet_to_log )
+       
+    else:
+       point_poll_sucess = False
+
+
+    Display = True
+    if (( state == 0 ) & ( Display == True)):
+    
+       # header
+       point_number = varlist[ constants.POINT_REPLY_POINT_ADDRESS_OFFSET + offset ]
+       loop_number  = varlist[ constants.POINT_REPLY_CHANNEL_ADDRR_OFFSET + offset ]    
+       #print( "\nPoint Information Reply Packet :   Node " + str(node_number) + " Loop " + str(loop_number)  + " Point " + str(point_number) )
        
        print ( "Flags       " + str( varlist[ constants.POINT_REPLY_FLAGS_OFFSET + offset] ) )
        print ( "Node        " + str( varlist[ constants.POINT_REPLY_NODE_OFFSET  + offset] ) )
@@ -211,7 +126,7 @@ def decode_point_info_reply( packet_to_decode ) :
        print ( "log part1   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_1_OFFSET + offset] ) )
        print ( "log part2   " + str( varlist[ constants.POINT_REPLY_LOG_ADDR_PART_2_OFFSET + offset] ) )
        
-       DeviceTypeAsString = DecodeDeviceType( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET + offset ] )
+       DeviceTypeAsString = utils.DecodeDeviceType( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET + offset ] )
        print ( "Device type " + str( varlist[ constants.POINT_REPLY_DEVICE_TYPE_OFFSET + offset ] ) + "    " + DeviceTypeAsString )
        
        # TODO Mike Mayhew - we need to define DecodeDeviceAttibs
@@ -235,29 +150,29 @@ def decode_point_info_reply( packet_to_decode ) :
        print ( "Dirty       " + str( varlist[ constants.POINT_REPLY_DIRTINESS + offset ] ) )       
        
        
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset ] )
+       ChannelTypeAsString = utils.DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset ] )
        print ( "units  1    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset] ) + "  " + ChannelTypeAsString)
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset ] )
+       ChannelTypeAsString = utils.DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset ] )
        print ( "units  2    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset] ) + "  " + ChannelTypeAsString )
-       ChannelTypeAsString = DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset ] )
+       ChannelTypeAsString = utils.DecodeChannelType( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset ] )
        print ( "units  3    " + str( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset] ) + "  " + ChannelTypeAsString)
        
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 + offset ] )
+       DisplayReadingAsString = utils.DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_1 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 + offset ] )
        print ( "Conv 1      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_1 + offset ] ) + "  " + DisplayReadingAsString )
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 + offset ] )
+       DisplayReadingAsString = utils.DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_2 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 + offset ] )
        print ( "Conv 2      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_2 + offset ] ) + "  " + DisplayReadingAsString)
-       DisplayReadingAsString = DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 + offset ] )
+       DisplayReadingAsString = utils.DecodeAnalogueValueToHuman( varlist[ constants.POINT_REPLY_UNIT_OF_MEASURE_3 + offset], varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 + offset ] )
        print ( "Conv 3      " + str( varlist[ constants.POINT_REPLY_CONVERTED_VALUE_3 + offset ] ) + "  " + DisplayReadingAsString )
        
-       InstantAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE + offset] )
+       InstantAlarmStateAsString = utils.DecodeAlarmState( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE + offset] )
        print ( "now Alarm   " + str( varlist[ constants.POINT_REPLY_INSTANT_ACTIVE + offset ] ) + "   " + InstantAlarmStateAsString )
        print ( "now Fault   " + str( varlist[ constants.POINT_REPLY_INSTANT_FAULT + offset ] ) )
        
-       ConfirmedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE + offset] )
+       ConfirmedAlarmStateAsString = utils.DecodeAlarmState( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE + offset] )
        print ( "Confirm Alm " + str( varlist[ constants.POINT_REPLY_CONFIRMED_ACTIVE + offset ] ) + "   " + ConfirmedAlarmStateAsString )
        print ( "Confirm Flt " + str( varlist[ constants.POINT_REPLY_CONFIRMED_FAULT + offset ] ) )
        
-       AckedAlarmStateAsString = DecodeAlarmState( varlist[ constants.POINT_REPLY_ACKED_ACTIVE + offset] )
+       AckedAlarmStateAsString = utils.DecodeAlarmState( varlist[ constants.POINT_REPLY_ACKED_ACTIVE + offset] )
        print ( "Acked Alm   " + str( varlist[ constants.POINT_REPLY_ACKED_ACTIVE + offset ] ) + "   " + AckedAlarmStateAsString )
        print ( "Acked Flt   " + str( varlist[ constants.POINT_REPLY_ACKED_FAULT + offset ] ) )
        
@@ -265,26 +180,12 @@ def decode_point_info_reply( packet_to_decode ) :
        print ( "OP Unforced " + str( varlist[ constants.POINT_REPLY_OUTPUT_UNFORCED_STATE + offset ] ) )
        print ( "OP Forced   " + str( varlist[ constants.POINT_REPLY_OUTPUT_FORCED_STATE + offset ] ) )
 
-        
+       print ( "Client Key 1 " + str( varlist[ constants.POINT_REPLY_CLIENT_KEY_1 + offset ] ) )
+       print ( "Client Key 2 " + str( varlist[ constants.POINT_REPLY_CLIENT_KEY_2 + offset ] ) )
+
+    
        print ( "----" )
-       
-       # WE ARE ONLY LOGGING GOOD REPLIES
-       # Replies where there is a device.
-
-       packet_to_log = ""
-        
-       for el in varlist:
-          packet_to_log += str(el) + ","
-          
-       packet_to_log += "\n"  
-          
-       writelog(packet_to_log,logfile)      
-       
-       #print("LOG THIS [new]: \n" + packet_to_log )
-       
-    else:
-       point_poll_sucess = False
-
+   
     
 def decode_panel_info_reply( packet_to_decode ) :     
     
@@ -295,8 +196,11 @@ def decode_panel_info_reply( packet_to_decode ) :
 
     length = len( packet_to_decode )
 
+
     # remove checksum from end
-    shorter = packet_to_decode[:length - 3]
+    # length of comma plus last characters may vary
+    #shorter = packet_to_decode[:length - 3]
+    shorter = packet_to_decode.strip(',\n')
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -306,7 +210,6 @@ def decode_panel_info_reply( packet_to_decode ) :
 
     print( "\nPanel Information" )
        
-    
     # get rid of the header
 
     varlist.pop(0)
@@ -325,8 +228,7 @@ def decode_panel_info_reply( packet_to_decode ) :
         varlist.pop(0)
         varlist.pop(0)
         varlist.pop(0)
-    
-      
+        
     print( "Time Date (secs): " + str(varlist[0]) + " " + str(varlist[1]) + " " + str(varlist[2]) + " " + str( varlist[3]) )
     print( "panel Version   : " + str(varlist[4]) + " " + str(varlist[5]) + " " + str(varlist[6]))
     print( "Days Left Auto  : " + str(varlist[7]) + " "+  str(varlist[8]) )
@@ -340,10 +242,8 @@ def decode_panel_info_reply( packet_to_decode ) :
         # print( "Set to MXspeak 6")
         use_mxspeak_6 = True;
     
-
     print ( "\n" )       
     
-
 
 def decode_reply_packet( packet_to_decode ) :
 
@@ -364,7 +264,7 @@ def decode_reply_packet( packet_to_decode ) :
     for el in varlist:
        print_me += "," + str(el);
     
-    print( print_me )
+    # print( print_me )
     
     PacketID = 0;
     
@@ -384,19 +284,20 @@ def decode_reply_packet( packet_to_decode ) :
    
     # --------------------
 
-
     if ( PacketID == constants.PACKET_ID_POINT_INFO_REPLY ) : 
       decode_point_info_reply( packet_to_decode ) 
-      
-    
-    if ( PacketID == constants.PACKET_ID_PANEL_INFORMATION ) : 
+       
+    elif ( PacketID == constants.PACKET_ID_PANEL_INFORMATION ) : 
       decode_panel_info_reply( packet_to_decode ) 
       
     else :
       print ( "Reply Packet Type " + str( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
 
 
-def FormRequestPacket( loop, point  ) :
+def FormRequestPacket( node_number, loop, is_first_point  ) :
+
+    # print( "node number " + str( node_number ))
+
 
     # without PTP framing
     # without checksum
@@ -435,20 +336,43 @@ def FormRequestPacket( loop, point  ) :
     #                        9,     0,  0 ,0,  1   ,0,  0,  123,26
     
     #
-    #                        L  SIG DN SN DCH  DT SCH  STSK MK PKT RS \/ packet is here
-    SamplePacket_mxspeak6 = "58,228,0, 0, 0,  4,  253, 146, 0, 148,0, 12,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
-    SamplePacket_mxspeak5 = "57    ,0, 0, 0,  1,    0,   0, 0, 148,   0 , 0 ,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
+    #                        L  SIG DN SN DCH  DT SCH  STSK MK PKT RS   \/ packet is here
+    #                                                                   The packet contents is different for MXSpeak 5 and 6
+    #SamplePacket_mxspeak6 = "58,228,0, 0, 0,  4,  253, 146, 0, 148,0,  12,1,0,1,0,  254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
+    #                                                                                254 - loginal zone
+    #                                                                                    0 - dcevice category any
+    #                                                                                      0,1 - group - dont care
+    #                                                                                          3 - output states any
+    #                                                                                            0,0 - unused
+    SamplePacket_mxspeak6  = "58,228,0, 0, 0,  4,  253, 146, 0, 148,0,  12,1,0,1,0,  254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,1,10"
+    #SamplePacket_mxspeak5 = "57    ,0, 0, 0,  1,    0,   0, 0, 148,   0 ,0,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,10"
+    #SamplePacket_mxspeak5 = "57    ,0, 0, 0,  1,    0,   0, 0, 148,   0 ,0,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,1,10"
+    SamplePacket_mxspeak5 = "57    ,0, 0, 0,  1,    0,   0, 0, 148,   0 ,0,1,0,1,0,254,0,0,1,3,0,0,3,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,1,10"
 
 
+    global glb_point_info_client_number
     global ptp_sequence
     global use_mxspeak_6
+                                                   
+    #                             DN CH DCH DT  SCH  ST MK PKT  RS  \/ client code here                                                   
+    NextPacket_mxspeak6 = "14,228,0, 0, 0,  4,  0,   0, 0, 150,  0, 0, 0, 0"
+    NextPacket_mxspeak5 = "11,    0, 0 ,0,  1,  0,   0,    123,150 ,0, 0"
+
+    glb_reply_indicates_no_more_points_on_loop = False
 
     if ( use_mxspeak_6 ) : 
-        varlist = map(int, SamplePacket_mxspeak6 .split(','));
         #print( "USING MXSPEAK 6")
+        if ( is_first_point == True ) : 
+            varlist = map(int, SamplePacket_mxspeak6 .split(','));
+        else : 
+            varlist = map(int, NextPacket_mxspeak6 .split(','));
+
     else : 
-        varlist = map(int, SamplePacket_mxspeak5 .split(','));
         #print( "USING MXSPEAK 5")
+        if ( is_first_point == True ) : 
+            varlist = map(int, SamplePacket_mxspeak5 .split(','));
+        else : 
+            varlist = map(int, NextPacket_mxspeak5 .split(','));
 
     detail_display = 0
     
@@ -456,12 +380,20 @@ def FormRequestPacket( loop, point  ) :
     # check the packet type.
     
     if ( use_mxspeak_6 ) : 
+
+        # if the point is NOT 1, then we will not be using the full request packet
+        # we will be using the 'next' packet.
         if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
-            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] = point
+        
+            varlist[ constants.POINT_INFO_REQUEST_HEADER_DESTINATION_NODE ] = node_number
+        
+            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET ] = 255
             varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET  ] = loop
+
+            varlist[ constants.POINT_INFO_REQUEST_NODE_OFFSET ] = node_number
             
             if ( config.DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW == 1 ) :
-                print( "\nRequest -  Loop : " + str( loop ) + ",  Point : " + str( point ) )            
+                print( "\nRequest -  Node : " + str(node_number) + " Loop : " + str( loop ) + ",  Point : " + str( point ) )            
 
                 if ( config.DISPLAY_POINT_REQUEST_PACKETS_DETAIL == 1 ) :
                    print ( "Point Information Request : Node      " + str(  varlist[ constants.POINT_INFO_REQUEST_NODE_OFFSET ] ) )
@@ -473,9 +405,17 @@ def FormRequestPacket( loop, point  ) :
                    print ( "Point Information Request : log pt 2  " + str(  varlist[ constants.POINT_INFO_REQUEST_LOGICAL_ADDR_PT2_OFFSET ] ) )
                    print ( "Point Information Request : dev cat   " + str(  varlist[ constants.POINT_INFO_REQUEST_DEVICE_CATEGORY_OFFSET ] ) )
 
-                else: 
-                   # If here something went wrong.  This function is only for point info request packets.
-                   print ( "xx Packet Type " + str(  varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] ) )
+
+        if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_6 ] == constants.PACKET_ID_POINT_INFO_NEXT_REQUEST ) : 
+        
+            varlist[ constants.POINT_INFO_REQUEST_HEADER_DESTINATION_NODE ] = node_number
+            varlist[ constants.POINT_INFO_NEXT_REQUEST_CLIENT_CODE_1 ] = 0 
+            varlist[ constants.POINT_INFO_NEXT_REQUEST_CLIENT_CODE_2  ] = glb_point_info_client_number
+        
+            print( "NOW HERE : Client code is "+ str(glb_point_info_client_number) )
+            if ( config.DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW == 1 ) :
+                print( "\nNext request : Cient code  : " + str(glb_point_info_client_number) )    
+
 
     else :
         # MXSPEAK 5
@@ -483,8 +423,22 @@ def FormRequestPacket( loop, point  ) :
         #
         if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] == constants.PACKET_ID_POINT_INFO_REQUEST ) : 
 
-            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET_MXSPEAK_5 ] = point
+            #varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET_MXSPEAK_5 ] = point
+            #varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET_MXSPEAK_5  ] = loop
+            
+            varlist[ constants.POINT_INFO_REQUEST_POINT_OFFSET_MXSPEAK_5 ] = 255
             varlist[ constants.POINT_INFO_REQUEST_LOOP_OFFSET_MXSPEAK_5  ] = loop
+            varlist[ constants.POINT_INFO_REQUEST_HEADER_DESTINATION_NODE_MXSPEAK5 ] = node_number
+            
+        if ( varlist[ constants.OFFSET_FOR_PACKET_TYPE_MXSPEAK_5 ] == constants.PACKET_ID_POINT_INFO_NEXT_REQUEST ) : 
+        
+            varlist[ constants.POINT_INFO_NEXT_REQUEST_CLIENT_CODE_1_MXPEAK5 ] = 0 
+            varlist[ constants.POINT_INFO_NEXT_REQUEST_CLIENT_CODE_2_MXPEAK5 ] = glb_point_info_client_number
+            #varlist[ constants.POINT_INFO_REQUEST_HEADER_DESTINATION_NODE_MXSPEAK5    ] = node_number
+        
+        
+            if ( config.DISPLAY_POINT_REQUEST_PACKETS_OVERVIEW == 1 ) :
+                print( "\nNext request : Cient code  : " + str(glb_point_info_client_number) )    
 
 
     # Start with SOH and low level sequence number.
@@ -494,8 +448,8 @@ def FormRequestPacket( loop, point  ) :
     varlist.insert(0, ptp_sequence)
 
     ptp_sequence += 1
-    if ptp_sequence > 8 : 
-     ptp_sequence = 5
+    if ptp_sequence > constants.MAX_PTP_SEQUENCE : 
+     ptp_sequence = constants.MIN_PTP_SEQUENCE
     
     checksum = 0
     for el in varlist:
@@ -511,84 +465,98 @@ def FormRequestPacket( loop, point  ) :
 
     result += "," + str(checksum)
 
-    #print( "Constructed Packet to send : \n" + result )
+    print( "Constructed Packet to send : \n" + result )
 
     return result 
 
 
 def PointInformationScan(   ) :
 
+    global use_mxspeak_6;
+    global current_node;
+    global glb_reply_indicates_no_more_points_on_loop
+
     # initial dealy between polls while we work out what is there.
-    delaybetweenpolls = 0.5
-
-
-    # 'poll_list' is a store indicating whether we should poll this device, start at TRUE.
-    # One store for all loop.  points in loop 1, then loop 2....
-    # Indexed by point number, we set '0' as False, this is unused.
-
-    poll_list = [ False ]
-    for loop in range( constants.MAX_LOOP_TO_SCAN ) :
-        for x in range( constants.MAX_ADDRESSES_PER_LOOP ):
-          poll_list.append( True )
+    delaybetweenpolls = 0.3
 
     # Declare loop variables, with start values
-    point_address = 1
+    first_point_address = True
     current_loop  = 1
+    current_node  = constants.MIN_NETWORK_NODE
+
+
+    max_loop = constants.MAX_LOOP_TO_SCAN_MXSPEAK_5
+    if ( use_mxspeak_6 == True ) : 
+        max_loop = constants.MAX_LOOP_TO_SCAN_MXSPEAK_6
 
 
     while(True):
 
         startTime = datetime.datetime.now();
-
-        poll_list_index = ((current_loop - 1) * constants.MAX_ADDRESSES_PER_LOOP) + point_address
         
-        if ( poll_list[ poll_list_index ] == True ) : 
+        #print "Packet in jobs list : \n"+content
+        
+        # TO DO
+        # Not ideal, but adjust the packet for the loop and point address
+        packettosend = FormRequestPacket( current_node, current_loop, first_point_address )
+        print( "Sending request for : Node " + str( current_node )+ " Loop " + str( current_loop ) )
+        
+        #print(  packettosend  )
 
-            #print "Packet in jobs list : \n"+content
+        action = "python packetizer/pointinfotest.py " + packettosend 
+        #print(action)
+        payload = subprocess.check_output(shlex.split(action));
+        length_of_reply = len(payload)
+        if length_of_reply > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
+            # writelog(payload,logfile)
+            # TODO adjust to windows 7/10
+            print("Reply from Panel, Length " + str( len( payload ) ) )
+            #print(payload)
             
-            # TO DO
-            # Not ideal, but adjust the packet for the loop and point address
-            packettosend = FormRequestPacket( current_loop, point_address )
-            print( "Sending Request for  - Loop " + str( current_loop ) + " Pnt " + str( point_address ) )
+            # If there was a NULL reply from 1-1, then we can assume the panel is not there.
+            # this is different from a proper reply that indicates no point.
+            if (length_of_reply == 2) :
             
-            #print(  packettosend  )
+                # We are not doing well.  So lets work our way out.
+                glb_reply_indicates_no_more_points_on_loop = True
+            
+                if (( first_point_address == True ) & ( current_loop == 1)) :
+                    glb_reply_indicates_no_more_points_on_loop = True
+                    current_loop =  max_loop
+                    print( "\n------------" )
+                    print( "Nothing from this node, move to next" )
+                    print( "------------\n" )
+            
+            if (length_of_reply > 10) :
+              decode_reply_packet(payload)                
+              
+            #print "Payload response to serviced packet : \n"+payload; 
+        else:
+            #print("this is the payload" + str(payload))
+            print "No device recorded for this point"
 
-            action = "python packetizer/pointinfotest.py " + packettosend 
-            #print(action)
-            payload = subprocess.check_output(shlex.split(action));
-            if len(payload) > 1: #for some reason printing an empty payload still constitutes to greater than 0, so we use 1 instead
-                # writelog(payload,logfile)
-                # TODO adjust to windows 7/10
-                print("Reply from Panel, Length " + str( len( payload ) ) )
-                #print(payload)
-                if (len(payload) > 10) :
-                  decode_reply_packet(payload) 
-                  if( point_poll_sucess == False) :
-                    poll_list[ poll_list_index ] = False
-                #print "Payload response to serviced packet : \n"+payload; 
-            else:
-                #print("this is the payload" + str(payload))
-                print "No device recorded for this point"
+        time.sleep(delaybetweenpolls) 
 
-            time.sleep(delaybetweenpolls) 
-
-        point_address += 1
+        first_point_address = False
         
         # If we have got to the end of a loop.
         # start again at the start of the next loop.
-        if (point_address >constants.MAX_ADDRESSES_PER_LOOP):         
-            point_address = 1
+        if (glb_reply_indicates_no_more_points_on_loop == True ):         
+            glb_reply_indicates_no_more_points_on_loop = False
+            print( "\n---------------\nMove to next loop\n----------------\n\n" )
+            
+            first_point_address = True
 
             current_loop += 1
-            if (current_loop > constants.MAX_LOOP_TO_SCAN): 
+            if (current_loop > max_loop): 
                 current_loop = 1
+                
+                current_node += 1
+                print( "\n---------------\nMove to next node\n----------------\n\n" )
+                
+                if (current_node > constants.MAX_NETWORK_NODE): 
+                    current_node = constants.MIN_NETWORK_NODE
 
-                x = poll_list.count( True )
-                print( "Number of devices replying to poll " + str( x ) ) 
-                # if very few devices, we need to chill the poll time,
-                if (( x * delaybetweenpolls ) < ( min_time_between_polls )) :
-                    delaybetweenpolls = min_time_between_polls / x
-                    print( "Updated poll time : " + str( delaybetweenpolls ) )
                    
 
 def FormOpeningRequestPacket(   ) :
@@ -634,9 +602,10 @@ def FormOpeningRequestPacket(   ) :
     # Add the PTP sequence number to the packet.
     varlist.insert(0, ptp_sequence)
 
+
     ptp_sequence += 1
-    if ptp_sequence > 8 : 
-     ptp_sequence = 5
+    if ptp_sequence > constants.MAX_PTP_SEQUENCE : 
+     ptp_sequence = constants.MIN_PTP_SEQUENCE
     
     checksum = 0
     for el in varlist:
@@ -670,10 +639,7 @@ def OpeningPacketsMode( ) :
         print(payload)
         
         if (len(payload) > 10) :
-          print( "HERE" )
           decode_reply_packet(payload) 
-        #  if( point_poll_sucess == False) :
-        #    poll_list[ poll_list_index ] = False
 
     else:
         #print("this is the payload" + str(payload))
@@ -693,10 +659,6 @@ def OpeningPacketsMode( ) :
             
             if (len(payload) > 10) :
               decode_reply_packet(payload)
-         
-              
-            #  if( point_poll_sucess == False) :
-            #    poll_list[ poll_list_index ] = False
             
             print "Payload response to serviced packet : \n"+payload; 
         else:
@@ -710,7 +672,7 @@ def OpeningPacketsMode( ) :
 
 
 
-delaybetweenpolls = 0.2
+delaybetweenpolls = 0.1
 min_time_between_polls = 5
 
 
@@ -732,47 +694,3 @@ print(entry)
 writelog(entry, logfile)
  
 PointInformationScan()
-
-
-
-          
-   
-
-
-          
-
-+ '\n\n'
-print(entry)
-
-
-# check logging directory
-checkLogDir() 
-
-logfile = str(datetime.datetime.today().strftime('%Y%m%d%H%M%S'))
-logfile += '_BlackBox.log'
-
-OpeningPacketsMode()
-
-print(entry)
-writelog(entry, logfile)
- 
-PointInformationScan()
-
-
-               
-
-
-          
-     
-
-
-          
-file)
- 
-PointInformationScan()
-
-
-               
-
-
-          
