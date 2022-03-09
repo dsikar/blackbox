@@ -186,7 +186,10 @@ def decode_point_info_reply( packet_to_decode ) :
     length = len( packet_to_decode )
 
     # remove checksum from end
+    print("decode_point_info_reply packet_to_decode:", packet_to_decode)
+
     shorter = packet_to_decode[:length - 3]
+    print("shorter:", shorter)
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -328,8 +331,9 @@ def decode_panel_info_reply( packet_to_decode ) :
     length = len( packet_to_decode )
 
     # remove checksum from end
+    print("decode_panel_info_reply packet_to_decode:", packet_to_decode)
     shorter = packet_to_decode[:length - 3]
-
+    print("shorter:", shorter)
     varlist = map(hex_to_int, shorter .split(','));
     
     # remove SOH and sequence number
@@ -378,9 +382,9 @@ def decode_reply_packet( packet_to_decode ) :
     global use_mxspeak_6;
 
     length = len( packet_to_decode )
-
+    print("decode_reply_packet(), packet_to_decode:", packet_to_decode)
     shorter = packet_to_decode[:length - 3]
-
+    print("shorter:", shorter)
     varlist = map(hex_to_int, shorter .split(','));
 
 
