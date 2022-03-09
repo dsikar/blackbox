@@ -27,6 +27,21 @@ def hex_to_int( value ) :
 
   return int( value, 16 )
 
+def fixPacket(packet_to_decode):
+  """
+  Remove whitespace characters and last comma from packet reply panel
+  Input
+    packet_to_decode: string, packet in the format '0x1,0xe,0x1b,0x0,0x0,0x0,0x0,0x0,0x3,0x7b,0x1b,0x38,0xc7,0x84,0x1b,0x1e,0x2,0x0,0x0,0x0,0x2,0x0,0x1,0x1,0x5,0x0,0x21,0x1,0x2,0xad,\n'
+  Output:
+    fixedPacket: string, trimmed string
+  Example
+  mypkt = '0x1,0xe,0x1b,0x0,0x0,0x0,0x0,0x0,0x3,0x7b,0x1b,0x38,0xc7,0x84,0x1b,0x1e,0x2,0x0,0x0,0x0,0x2,0x0,0x1,0x1,0x5,0x0,0x21,0x1,0x2,0xad,\n'
+  print(mypkt)
+  mypkt = fixPacket(mypkt)
+  print(mypkt)  
+  """
+  
+  return packet_to_decode[0:packet_to_decode.rfind(',')]
 
 def DecodePacketType( packet_id ) :
 
@@ -186,10 +201,11 @@ def decode_point_info_reply( packet_to_decode ) :
     length = len( packet_to_decode )
 
     # remove checksum from end
-    print("decode_point_info_reply packet_to_decode:", packet_to_decode)
-
-    shorter = packet_to_decode[:length - 3]
-    print("shorter:", shorter)
+    #print("decode_point_info_reply packet_to_decode:", packet_to_decode)
+    
+    # shorter = packet_to_decode[:length - 3]
+    shorter = fixPacket(packet_to_decode)
+    #print("shorter:", shorter)
 
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -332,7 +348,8 @@ def decode_panel_info_reply( packet_to_decode ) :
 
     # remove checksum from end
     print("decode_panel_info_reply packet_to_decode:", packet_to_decode)
-    shorter = packet_to_decode[:length - 3]
+    # shorter = packet_to_decode[:length - 3]
+    shorter = fixPacket(packet_to_decode)
     print("shorter:", shorter)
     varlist = map(hex_to_int, shorter .split(','));
     
@@ -383,7 +400,8 @@ def decode_reply_packet( packet_to_decode ) :
 
     length = len( packet_to_decode )
     print("decode_reply_packet(), packet_to_decode:", packet_to_decode)
-    shorter = packet_to_decode[:length - 3]
+    # shorter = packet_to_decode[:length - 3]
+    shorter = fixPacket(packet_to_decode)
     print("shorter:", shorter)
     varlist = map(hex_to_int, shorter .split(','));
 
