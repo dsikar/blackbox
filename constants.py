@@ -22,7 +22,8 @@ MAX_PTP_SEQUENCE = 15
 # so that needs to be NOT LESS than MAX_LOOP_TO_SCAN_MXSPEAK_5
 MAX_LOOP_TO_SCAN_MXSPEAK_5 = 8
 MAX_LOOP_TO_SCAN_MXSPEAK_6 = 32
-
+# redux
+MAX_LOOP_TO_SCAN = 1
 # This is fixed, (250) here to make code easier to read.
 MAX_ADDRESSES_PER_LOOP = 250
 
